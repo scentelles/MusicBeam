@@ -10,6 +10,8 @@ import controlP5.*;
 import ddf.minim.*;
 import ddf.minim.analysis.*;
 
+import oscP5.*;
+
 String version = "2.5.1";
 
 public Boolean debugMode = false;
@@ -43,11 +45,54 @@ float randomTimer = 0;
 
 int randomEffect = 0;
 int width = 775;
-int height = 570;
+int height = 620;
 
 float maxLevel = 0;
 float goalMaxLevel=0;
+
+
+OscP5 oscP5;
+
+
+/* incoming osc message are forwarded to the oscEvent method. */
+void oscEvent(OscMessage theOscMessage) {
+  /* print the address pattern and the typetag of the received OscMessage */
+  print("### received an osc message.");
+  print(" addrpattern: "+theOscMessage.addrPattern());
+  println(" typetag: "+theOscMessage.typetag());
+  if(theOscMessage.checkAddrPattern("/musicbeam/multifader2/1"))
+  {
+    println("pattern1 matched");
+    activeSetting.activate(9);
+    activeEffect.activate(9);
+   // effectArray[9].effect_manual_triggered = true;   
+  }
+  if(theOscMessage.checkAddrPattern("/2/multifader2/2"))
+  {
+    println("pattern2 matched");
+
+    effectArray[9].effect_manual_triggered = true;   
+  }
+  if(theOscMessage.checkAddrPattern("/2/multifader2/3"))
+  {
+    println("pattern3 matched");
+
+    effectArray[9].effect_manual_triggered = false;   
+  }  
+
+
+  if(theOscMessage.checkAddrPattern("/2/multifader2/4"))
+  {
+    println("pattern4 matched");
+    RGBScreen_Effect tempScreen = (RGBScreen_Effect)effectArray[9];
+    tempScreen.delaySlider.setValue(theOscMessage.get(0).floatValue()); 
+
+  }   
+}
+
 void settings() {
+  oscP5 = new OscP5(this,7700);
+  
   pixelDensity(displayDensity());
   initAudioInput();
 
@@ -72,6 +117,9 @@ void setup() {
   if (! debugMode)
     checkForUpdate();
 }
+
+
+
 
 
 void draw() {
@@ -242,7 +290,7 @@ void initEffects()
 {
   initRandomControls();
 
-  effectArray = new Effect[9];
+  effectArray = new Effect[10];
   effectArray[0] = new Blackout_Effect(this, 0);
   effectArray[1] = new Strobe_Effect(this, 1);
   effectArray[2] = new Scanner_Effect(this, 2);
@@ -252,7 +300,8 @@ void initEffects()
   effectArray[6] = new Snowstorm_Effect(this, 6);
   effectArray[7] = new LaserBurst_Effect(this, 7);
   effectArray[8] = new Polygon_Effect(this, 8);
-
+  effectArray[9] = new RGBScreen_Effect(this, 9);
+   
   activeSetting.activate(0);
 
   for (Toggle t : activeEffect.getItems())
